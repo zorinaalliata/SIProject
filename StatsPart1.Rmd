@@ -1,0 +1,108 @@
+---
+title: "Statistical Inference Part 1 - Simulation Exercise"
+author: "Zorina Alliata"
+date: "Tuesday, February 17, 2015"
+output: pdf_document
+---
+
+
+<h1>Synopsis</h1>
+
+The exponential distribution can be simulated in R with rexp(n, lambda) where n is the number of observations and lambda is the rate parameter. The mean of exponential distribution is 1/lambda and the standard deviation is also also 1/lambda.
+In these simulation exercises, we investigate the distribution of averages of 40 exponentials over a thousand observations (n=100), assuming the lambda = 0.2
+
+
+<h1>Results</h1>
+
+Create a thousand simulated averages of 40 exponentials, i.e. rexp(40,0.2)
+
+```{r}
+expdist <- rep(NA,1000)
+for (i in 1:1000){
+    expdist[i] <- mean(rexp(40,0.2))
+}
+```
+
+The theoretical center of the mean is 1/lambda = 1/0.2: 5
+
+```{r}
+calcmean <- mean(expdist)
+calcmean
+```
+
+The calculated mean is 5.044 and the theoretical mean is 5, so the variation is negligible.
+
+The theoretical variance is ((1/0.2)^2)/40 : 0.625
+
+```{r}
+calcvar <- var(expdist)
+calcvar
+```
+
+The calculated variance is 0.6333 and the theoretical variance is 0.625, so both distributions have similar variability.
+
+We use the scale() function to plot the distribution and compare it to a normal distribution.
+
+```{r, echo=FALSE}
+expscale <- scale(expdist)
+hist(expscale,probability=T, main="", ylim=c(0, 0.5))
+lines(density(expscale))
+# Compare with the standard normal distribution
+curve(dnorm(x,0,1), -3, 3, col="red", add=T)
+```
+
+This is to be expected because of the CLT.
+<p>
+
+<b>Evaluating the coverage of the confidence interval</b>
+
+ 
+A 95% confidence interval should contain, if we simulate a big number of them, the mean value for the exponential distribution ($1 / \lambda$) 95% of the time.
+ 
+
+```{r}
+
+set.seed(567)
+
+lambda <- 0.2
+
+# checks for each simulation if the mean is in the confidence interval
+
+inconfint <- function(lambda) {
+
+                ehats <- rexp(1000, lambda)
+
+                se <- sd(ehats)/sqrt(1000)
+
+                ll <- mean(ehats) - 1.96 * se
+
+                ul <- mean(ehats) + 1.96 * se
+
+                (ll < 1/lambda & ul > 1/lambda)
+
+        }
+
+# estimate the coverage in each round of simulations
+
+coverage <- function(lambda) {
+
+    covvals <- replicate(100, inconfint(lambda))
+
+    mean(covvals)
+
+}
+
+# perform the simulation
+
+simres <- replicate(100, coverage(lambda))
+
+mean(simres)
+
+```
+
+ 
+
+The confidence interval contains the theoretical value 94.84% of the
+
+time (close to the expected 95%).
+
